@@ -10,6 +10,7 @@ create table if not exists public.posts (
   title text not null,
   slug text not null unique,
   content text not null default '',
+  format text not null default 'markdown' check (format in ('markdown', 'html')),
   excerpt text not null default '',
   cover_image_url text,
   status text not null default 'draft' check (status in ('draft', 'published')),

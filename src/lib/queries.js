@@ -2,7 +2,7 @@ import { supabase } from './supabase'
 import { slugify } from './utils'
 
 const POST_LIST_FIELDS =
-  'id, title, slug, excerpt, content, cover_image_url, status, published_at, created_at, view_count, tags (id, name, slug)'
+  'id, title, slug, excerpt, content, format, cover_image_url, status, published_at, created_at, view_count, tags (id, name, slug)'
 
 export async function fetchPublishedPosts(search = '') {
   let query = supabase
