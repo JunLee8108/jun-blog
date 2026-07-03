@@ -111,18 +111,6 @@ export default function PostDetail() {
             ))}
           </div>
         )}
-        {/* 폴라로이드 커버 */}
-        {post.cover_image_url && (
-          <figure className="mt-10">
-            <div className="rounded-md bg-card p-2 shadow-[0_10px_28px_-14px_rgba(43,38,32,0.3)] ring-1 ring-line">
-              <img
-                src={post.cover_image_url}
-                alt=""
-                className="max-h-80 w-full rounded-[3px] object-cover"
-              />
-            </div>
-          </figure>
-        )}
       </header>
 
       <TableOfContents headings={prepared.headings} />
