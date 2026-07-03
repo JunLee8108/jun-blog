@@ -1,5 +1,6 @@
 import { Route, Routes } from 'react-router-dom'
 import Layout from './components/Layout'
+import ScrollToTop from './components/ScrollToTop'
 import ProtectedRoute from './components/ProtectedRoute'
 import Home from './pages/Home'
 import PostDetail from './pages/PostDetail'
@@ -12,7 +13,9 @@ import PostEditor from './pages/admin/PostEditor'
 
 export default function App() {
   return (
-    <Routes>
+    <>
+      <ScrollToTop />
+      <Routes>
       <Route element={<Layout />}>
         <Route index element={<Home />} />
         <Route path="posts/:slug" element={<PostDetail />} />
@@ -25,7 +28,8 @@ export default function App() {
           <Route path="admin/edit/:id" element={<PostEditor />} />
         </Route>
         <Route path="*" element={<NotFound />} />
-      </Route>
-    </Routes>
+        </Route>
+      </Routes>
+    </>
   )
 }
