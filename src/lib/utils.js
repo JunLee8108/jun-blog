@@ -9,6 +9,17 @@ export function formatDate(dateString) {
   })
 }
 
+// 일주일 안쪽 글에는 사람 말투의 상대 시간을 병기
+export function relativeDate(dateString) {
+  if (!dateString) return null
+  const days = Math.floor((Date.now() - new Date(dateString).getTime()) / 86400000)
+  if (days < 0 || days > 7) return null
+  if (days === 0) return '오늘'
+  if (days === 1) return '어제'
+  if (days === 2) return '그제'
+  return `${days}일 전`
+}
+
 // 한글 기준 분당 약 500자로 계산
 export function readingTime(content = '') {
   const chars = content.replace(/\s/g, '').length

@@ -4,6 +4,9 @@ import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import usePageTitle from '../hooks/usePageTitle'
 
+const fieldClass =
+  'w-full rounded-lg border border-line bg-card px-3 py-2.5 text-sm outline-none transition-colors duration-200 focus:border-clay/60'
+
 export default function Login() {
   usePageTitle('로그인')
   const navigate = useNavigate()
@@ -25,7 +28,7 @@ export default function Login() {
     })
     setSubmitting(false)
     if (signInError) {
-      setError('이메일 또는 비밀번호가 올바르지 않습니다.')
+      setError('이메일 또는 비밀번호가 올바르지 않아요.')
       return
     }
     navigate('/admin', { replace: true })
@@ -33,9 +36,8 @@ export default function Login() {
 
   return (
     <div className="mx-auto max-w-sm py-10">
-      <h1 className="text-xl font-bold tracking-tight text-neutral-900 dark:text-neutral-100">
-        관리자 로그인
-      </h1>
+      <h1 className="text-xl font-semibold text-ink">주인장 확인</h1>
+      <p className="mt-1.5 text-sm text-faded">이 서재의 주인이신가요?</p>
       <form onSubmit={handleSubmit} className="mt-6 space-y-3">
         <input
           type="email"
@@ -44,7 +46,7 @@ export default function Login() {
           placeholder="이메일"
           autoComplete="email"
           required
-          className="w-full rounded-lg border border-neutral-200 bg-transparent px-3 py-2.5 text-sm outline-none transition-colors focus:border-indigo-400 dark:border-neutral-800 dark:focus:border-indigo-500"
+          className={fieldClass}
         />
         <input
           type="password"
@@ -53,15 +55,15 @@ export default function Login() {
           placeholder="비밀번호"
           autoComplete="current-password"
           required
-          className="w-full rounded-lg border border-neutral-200 bg-transparent px-3 py-2.5 text-sm outline-none transition-colors focus:border-indigo-400 dark:border-neutral-800 dark:focus:border-indigo-500"
+          className={fieldClass}
         />
-        {error && <p className="text-xs text-red-500">{error}</p>}
+        {error && <p className="text-xs text-clay-strong">{error}</p>}
         <button
           type="submit"
           disabled={submitting}
-          className="w-full rounded-lg bg-neutral-900 py-2.5 text-sm font-medium text-white transition-colors hover:bg-neutral-700 disabled:opacity-50 dark:bg-neutral-100 dark:text-neutral-900 dark:hover:bg-neutral-300"
+          className="w-full rounded-lg bg-clay py-2.5 text-sm font-medium text-[#fdf9f3] transition-colors duration-200 hover:bg-clay-strong disabled:opacity-50"
         >
-          {submitting ? '로그인 중…' : '로그인'}
+          {submitting ? '확인 중…' : '들어가기'}
         </button>
       </form>
     </div>

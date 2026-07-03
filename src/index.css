@@ -4,6 +4,45 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
+/* ── 서재의 오후: 종이와 잉크 팔레트 ─────────────────────────── */
+:root {
+  --paper: #faf7f0; /* 낮의 종이 */
+  --card: #fffdf8; /* 밝은 속지 */
+  --ink: #2b2620; /* 잉크 (제목·강조) */
+  --body-ink: #464036; /* 본문 잉크 */
+  --faded: #948a7b; /* 옅게 마른 잉크 (메타) */
+  --line: #e7e0d3; /* 종이 가장자리 */
+  --clay: #b95f42; /* 테라코타 */
+  --clay-strong: #a04e33;
+  --clay-soft: rgba(185, 95, 66, 0.1);
+  --highlight: rgba(240, 200, 105, 0.45); /* 형광펜 */
+}
+
+.dark {
+  --paper: #181512; /* 밤의 서재 */
+  --card: #221d18;
+  --ink: #ece5d8; /* 촛불에 비친 종이색 */
+  --body-ink: #cfc7b8;
+  --faded: #8d8375;
+  --line: #332c24;
+  --clay: #d78e69;
+  --clay-strong: #e3a181;
+  --clay-soft: rgba(215, 142, 105, 0.13);
+  --highlight: rgba(240, 200, 105, 0.22);
+}
+
+@theme inline {
+  --color-paper: var(--paper);
+  --color-card: var(--card);
+  --color-ink: var(--ink);
+  --color-body: var(--body-ink);
+  --color-faded: var(--faded);
+  --color-line: var(--line);
+  --color-clay: var(--clay);
+  --color-clay-strong: var(--clay-strong);
+  --color-clay-soft: var(--clay-soft);
+}
+
 @theme {
   --font-sans:
     'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont,
@@ -12,23 +51,136 @@
 
 html {
   scroll-behavior: smooth;
+  scrollbar-color: var(--line) transparent;
 }
 
 body {
-  @apply bg-white text-neutral-800 antialiased dark:bg-neutral-950 dark:text-neutral-200;
+  @apply bg-paper text-ink antialiased;
   font-feature-settings: 'ss05';
+  word-break: keep-all; /* 한국어 단어 단위 줄바꿈 */
 }
 
-/* 코드 블록은 라이트/다크 모두 어두운 배경 유지 */
+::selection {
+  background: var(--highlight);
+}
+
+/* 다크 토글 시 색이 저물듯 전환 */
+.theme-fade,
+.theme-fade *,
+.theme-fade *::before,
+.theme-fade *::after {
+  transition:
+    background-color 0.35s ease,
+    color 0.35s ease,
+    border-color 0.35s ease,
+    fill 0.35s ease !important;
+}
+
+/* 페이지 진입 시 콘텐츠가 살짝 떠오르는 페이드 */
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fade-up {
+  animation: fade-up 0.45s ease both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fade-up {
+    animation: none;
+  }
+}
+
+/* ── 본문(prose): 일기 읽는 호흡 ─────────────────────────────── */
+.prose {
+  --tw-prose-body: var(--body-ink);
+  --tw-prose-headings: var(--ink);
+  --tw-prose-lead: var(--body-ink);
+  --tw-prose-links: var(--clay);
+  --tw-prose-bold: var(--ink);
+  --tw-prose-counters: var(--faded);
+  --tw-prose-bullets: var(--faded);
+  --tw-prose-hr: var(--line);
+  --tw-prose-quotes: var(--body-ink);
+  --tw-prose-quote-borders: var(--clay);
+  --tw-prose-captions: var(--faded);
+  --tw-prose-code: var(--ink);
+  --tw-prose-th-borders: var(--line);
+  --tw-prose-td-borders: var(--line);
+  font-size: 1.0625rem;
+  line-height: 1.85;
+}
+
+.prose a {
+  text-underline-offset: 3px;
+  text-decoration-color: color-mix(in srgb, var(--clay) 40%, transparent);
+  transition: text-decoration-color 0.2s ease;
+}
+
+.prose a:hover {
+  text-decoration-color: var(--clay);
+}
+
+.prose h1,
+.prose h2,
+.prose h3 {
+  font-weight: 600;
+  scroll-margin-top: 5rem;
+}
+
+/* 인용구: 종이에 붙인 쪽지 */
+.prose blockquote {
+  font-style: normal;
+  font-weight: inherit;
+  background: var(--card);
+  border-left: 3px solid var(--clay);
+  border-radius: 0 12px 12px 0;
+  padding: 0.8em 1.3em;
+}
+
+.prose blockquote p:first-of-type::before,
+.prose blockquote p:last-of-type::after {
+  content: none;
+}
+
+/* 형광펜 하이라이트 */
+.prose mark {
+  background: var(--highlight);
+  color: inherit;
+  padding: 0.05em 0.2em;
+  border-radius: 3px;
+}
+
+.prose hr {
+  border-style: dashed;
+}
+
+.prose img {
+  border-radius: 12px;
+}
+
+/* 코드 블록: 밤색 카드 (라이트/다크 공통) */
 .prose pre {
-  @apply rounded-xl border border-neutral-800 bg-neutral-900;
+  background: #241e18;
+  border: 1px solid #3b322a;
+  border-radius: 12px;
 }
 
 .prose :not(pre) > code {
-  @apply rounded-md bg-neutral-100 px-1.5 py-0.5 font-normal text-neutral-800 before:content-none after:content-none dark:bg-neutral-800 dark:text-neutral-200;
+  background: color-mix(in srgb, var(--ink) 8%, transparent);
+  border-radius: 5px;
+  padding: 0.15em 0.4em;
+  font-weight: 500;
 }
 
-.prose h2,
-.prose h3 {
-  scroll-margin-top: 5rem;
+.prose :not(pre) > code::before,
+.prose :not(pre) > code::after {
+  content: none;
 }
