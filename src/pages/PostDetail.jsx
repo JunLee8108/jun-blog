@@ -19,6 +19,13 @@ import usePageTitle from '../hooks/usePageTitle'
 function TableOfContents({ headings }) {
   if (headings.length < 2) return null
 
+  // 부드러운 스크롤은 목차 클릭에만 적용 (전역 smooth는 페이지 이동을 출렁이게 함)
+  const handleClick = (e, id) => {
+    e.preventDefault()
+    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' })
+    window.history.replaceState(null, '', `#${id}`)
+  }
+
   return (
     <nav aria-label="목차" className="mb-12 border-l-2 border-clay/35 pl-5">
       <p className="text-xs font-medium tracking-[0.14em] text-faded">목차</p>
@@ -30,6 +37,7 @@ function TableOfContents({ headings }) {
           >
             <a
               href={`#${heading.id}`}
+              onClick={(e) => handleClick(e, heading.id)}
               className="text-body/80 transition-colors duration-200 hover:text-clay"
             >
               {heading.text}

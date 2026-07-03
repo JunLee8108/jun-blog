@@ -50,7 +50,8 @@
 }
 
 html {
-  scroll-behavior: smooth;
+  /* 스크롤바 유무와 관계없이 공간을 확보해 페이지 간 가로 밀림 방지 */
+  scrollbar-gutter: stable;
   scrollbar-color: var(--line) transparent;
 }
 
