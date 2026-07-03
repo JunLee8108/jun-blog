@@ -99,7 +99,7 @@ export default function Header() {
 
   return (
     <header className="sticky top-0 z-10 border-b border-line/70 bg-paper/85 backdrop-blur-md">
-      <div className="mx-auto flex h-14 max-w-3xl items-center justify-between gap-2 px-4 sm:px-6">
+      <div className="mx-auto flex h-14 max-w-4xl items-center justify-between gap-2 px-4 sm:px-6">
         <Link
           to="/"
           className="shrink-0 text-[17px] font-semibold tracking-tight text-ink transition-colors duration-200 hover:text-clay"
@@ -151,7 +151,7 @@ export default function Header() {
 
       {/* 모바일 검색 줄 */}
       {mobileSearchOpen && (
-        <div className="mx-auto max-w-3xl px-4 pb-3 sm:hidden">
+        <div className="mx-auto max-w-4xl px-4 pb-3 sm:hidden">
           <div className="relative">
             <SearchIcon className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-faded" />
             <input
