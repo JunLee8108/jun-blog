@@ -60,21 +60,21 @@ const shareIcon = (
   </svg>
 )
 
-/* variant: 'icon'(상단 액션 줄) | 'pill'(글 끝 알약 버튼) */
+/* variant: 'icon'(상단 액션 줄) | 'minimal'(글 끝 텍스트 액션) */
 export default function ShareButton({ title, text, variant = 'icon' }) {
   const { share, copied } = useShare()
   const handleClick = () => share({ title, text })
 
-  if (variant === 'pill') {
+  if (variant === 'minimal') {
     return (
       <>
         <button
           type="button"
           onClick={handleClick}
-          className="inline-flex items-center gap-1.5 rounded-full border border-line px-4 py-2 text-sm text-body transition-colors duration-200 hover:border-clay/50 hover:text-clay"
+          className="inline-flex items-center gap-1.5 text-sm text-faded transition-colors duration-200 hover:text-clay"
         >
           {shareIcon}
-          공유하기
+          공유
         </button>
         <Toast show={copied}>링크를 복사했어요</Toast>
       </>

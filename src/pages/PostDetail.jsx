@@ -249,16 +249,14 @@ export default function PostDetail() {
         <Markdown content={post.content} />
       )}
 
-      {/* 글의 끝맺음 */}
-      <Ornament className="mt-14 mb-8 text-clay/60" />
-      <div className="mb-6 flex flex-col items-center gap-4">
-        <p className="text-sm text-faded">
-          이 글이 마음에 들었다면, 마음을 남기거나 누군가에게 건네주세요
-        </p>
-        <div className="flex gap-2">
-          <LikeButton slug={post.slug} initialCount={post.like_count || 0} />
-          <ShareButton title={post.title} text={post.excerpt} variant="pill" />
-        </div>
+      {/* 글의 끝맺음: ✱ 아래 조용한 액션 한 줄 */}
+      <Ornament className="mt-14 mb-4 text-clay/60" />
+      <div className="flex items-center justify-center gap-3">
+        <LikeButton slug={post.slug} initialCount={post.like_count || 0} />
+        <span aria-hidden="true" className="text-faded/50">
+          ·
+        </span>
+        <ShareButton title={post.title} text={post.excerpt} variant="minimal" />
       </div>
 
       <PostFooterNav post={post} />
