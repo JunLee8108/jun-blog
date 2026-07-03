@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { fetchPublishedPosts } from '../lib/queries'
 import PostCard from '../components/PostCard'
@@ -9,7 +9,8 @@ import usePageTitle from '../hooks/usePageTitle'
 
 export default function Home() {
   usePageTitle()
-  const [search, setSearch] = useState('')
+  const [searchParams] = useSearchParams()
+  const search = searchParams.get('q') || ''
   const debouncedSearch = useDebounce(search, 300)
 
   const { data: posts, isLoading, isError } = useQuery({
@@ -33,27 +34,14 @@ export default function Home() {
         </p>
       </section>
 
-      <div className="relative mb-8">
-        <svg
-          className="pointer-events-none absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-faded"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="1.8"
-          strokeLinecap="round"
-          aria-hidden="true"
-        >
-          <circle cx="11" cy="11" r="7" />
-          <path d="m21 21-4.3-4.3" />
-        </svg>
-        <input
-          type="search"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="지난 이야기 찾아보기"
-          className="w-full rounded-xl border border-line bg-card py-2.5 pr-4 pl-10 text-sm outline-none transition-colors duration-200 placeholder:text-faded/70 focus:border-clay/60"
-        />
-      </div>
+      {search && (
+        <p className="mb-6 text-sm text-faded">
+          <span className="font-medium text-clay">"{search}"</span> 검색 결과
+          {posts && (
+            <span className="tabular-nums"> — {posts.length}편</span>
+          )}
+        </p>
+      )}
 
       {isLoading && <Spinner />}
       {isError && <ErrorMessage />}

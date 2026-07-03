@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect } from 'react'
+import { useEffect, useLayoutEffect, useRef } from 'react'
 import { useLocation, useNavigationType } from 'react-router-dom'
 
 /* SPA에서는 브라우저 기본 스크롤 복원이 콘텐츠 교체 타이밍과 어긋나므로 직접 관리한다 */
@@ -29,9 +29,14 @@ export default function ScrollToTop() {
   }, [location.key])
 
   // 새 이동은 맨 위로, 뒤로/앞으로 가기는 기억해 둔 위치로
+  const prevPathRef = useRef(location.pathname)
   useEffect(() => {
+    const pathChanged = prevPathRef.current !== location.pathname
+    prevPathRef.current = location.pathname
+
     if (navigationType !== 'POP') {
-      window.scrollTo(0, 0)
+      // 검색어 입력처럼 같은 경로에서 쿼리만 바뀔 때는 스크롤을 건드리지 않는다
+      if (pathChanged) window.scrollTo(0, 0)
       return
     }
     const target = savedPositions.get(location.key) ?? 0
@@ -44,7 +49,7 @@ export default function ScrollToTop() {
       }
     }
     restore()
-  }, [location.key, navigationType])
+  }, [location.key, location.pathname, navigationType])
 
   return null
 }
