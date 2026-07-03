@@ -2,25 +2,27 @@ import { useEffect, useMemo } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { fetchPostBySlug, incrementViewCount } from '../lib/queries'
-import { extractHeadings, formatDate, readingTime } from '../lib/utils'
+import {
+  extractHeadings,
+  formatDate,
+  readingTime,
+  relativeDate,
+} from '../lib/utils'
 import Markdown from '../components/Markdown'
 import TagBadge from '../components/TagBadge'
 import Spinner, { EmptyState, ErrorMessage } from '../components/Spinner'
 import Comments from '../components/Comments'
+import { Ornament } from '../components/Doodles'
 import usePageTitle from '../hooks/usePageTitle'
 
+/* 노트 여백에 적어둔 메모 같은 목차 */
 function TableOfContents({ headings }) {
   if (headings.length < 2) return null
 
   return (
-    <nav
-      aria-label="목차"
-      className="mb-10 rounded-xl border border-neutral-200/70 bg-neutral-50 px-5 py-4 dark:border-neutral-800/70 dark:bg-neutral-900/50"
-    >
-      <p className="mb-2 text-xs font-semibold tracking-wide text-neutral-400 uppercase dark:text-neutral-500">
-        목차
-      </p>
-      <ul className="space-y-1.5 text-sm">
+    <nav aria-label="목차" className="mb-12 border-l-2 border-clay/35 pl-5">
+      <p className="text-xs font-medium tracking-[0.14em] text-faded">목차</p>
+      <ul className="mt-2.5 space-y-1.5 text-sm">
         {headings.map((heading) => (
           <li
             key={heading.id}
@@ -28,7 +30,7 @@ function TableOfContents({ headings }) {
           >
             <a
               href={`#${heading.id}`}
-              className="text-neutral-500 transition-colors hover:text-indigo-600 dark:text-neutral-400 dark:hover:text-indigo-400"
+              className="text-body/80 transition-colors duration-200 hover:text-clay"
             >
               {heading.text}
             </a>
@@ -60,29 +62,34 @@ export default function PostDetail() {
 
   if (isLoading) return <Spinner />
   if (isError) return <ErrorMessage />
-  if (!post) return <EmptyState message="존재하지 않는 글입니다." />
+  if (!post) return <EmptyState message="존재하지 않는 글이에요." />
+
+  const relative = relativeDate(post.published_at)
 
   return (
     <article>
       <Link
         to="/"
-        className="mb-8 inline-flex items-center gap-1 text-sm text-neutral-400 transition-colors hover:text-neutral-700 dark:text-neutral-500 dark:hover:text-neutral-300"
+        className="mb-10 inline-flex items-center gap-1 text-sm text-faded transition-colors duration-200 hover:text-clay"
       >
         ← 목록으로
       </Link>
 
       <header className="mb-10">
-        <h1 className="text-3xl leading-snug font-bold tracking-tight text-neutral-900 dark:text-neutral-100">
+        {/* 일기니까 날짜부터 */}
+        <p className="text-[13px] font-medium tracking-wide text-clay tabular-nums">
+          <time dateTime={post.published_at}>{formatDate(post.published_at)}</time>
+          {relative && <span className="opacity-80"> · {relative}</span>}
+        </p>
+        <h1 className="mt-3 text-[27px] leading-snug font-semibold text-ink sm:text-3xl">
           {post.title}
         </h1>
-        <p className="mt-3 text-sm text-neutral-400 dark:text-neutral-500">
-          <time dateTime={post.published_at}>{formatDate(post.published_at)}</time>
-          <span className="mx-1.5">·</span>
+        <p className="mt-3 text-sm text-faded tabular-nums">
           {readingTime(post.content)} 읽기
           {post.view_count > 0 && (
             <>
               <span className="mx-1.5">·</span>
-              조회 {post.view_count.toLocaleString()}
+              {post.view_count.toLocaleString()}번 읽힘
             </>
           )}
         </p>
@@ -93,17 +100,25 @@ export default function PostDetail() {
             ))}
           </div>
         )}
+        {/* 폴라로이드 커버 */}
         {post.cover_image_url && (
-          <img
-            src={post.cover_image_url}
-            alt=""
-            className="mt-8 w-full rounded-2xl object-cover"
-          />
+          <figure className="mt-10 -rotate-1 transition-transform duration-300 hover:rotate-0">
+            <div className="rounded-md bg-card p-3 pb-4 shadow-[0_14px_35px_-14px_rgba(43,38,32,0.3)] ring-1 ring-line">
+              <img
+                src={post.cover_image_url}
+                alt=""
+                className="w-full rounded-[3px] object-cover"
+              />
+            </div>
+          </figure>
         )}
       </header>
 
       <TableOfContents headings={headings} />
       <Markdown content={post.content} />
+
+      {/* 글의 끝맺음 */}
+      <Ornament className="my-14 text-clay/60" />
       <Comments postId={post.id} />
     </article>
   )

@@ -4,6 +4,9 @@ import { addComment, deleteComment, fetchComments } from '../lib/queries'
 import { formatDate } from '../lib/utils'
 import { useAuth } from '../context/AuthContext'
 
+const fieldClass =
+  'rounded-lg border border-line bg-paper px-3 py-2 text-sm outline-none transition-colors duration-200 focus:border-clay/60'
+
 export default function Comments({ postId }) {
   const { session } = useAuth()
   const queryClient = useQueryClient()
@@ -45,12 +48,21 @@ export default function Comments({ postId }) {
   }
 
   return (
-    <section className="mt-14 border-t border-neutral-200/70 pt-10 dark:border-neutral-800/70">
-      <h2 className="text-base font-semibold text-neutral-900 dark:text-neutral-100">
-        댓글 {comments.length > 0 && `${comments.length}개`}
+    <section className="mt-4">
+      <h2 className="text-base font-semibold text-ink">
+        댓글{' '}
+        {comments.length > 0 && (
+          <span className="font-normal text-faded tabular-nums">
+            {comments.length}
+          </span>
+        )}
       </h2>
 
-      <form onSubmit={handleSubmit} className="mt-5 space-y-3">
+      {/* 쪽지 카드 느낌의 입력 폼 */}
+      <form
+        onSubmit={handleSubmit}
+        className="mt-5 space-y-3 rounded-2xl border border-line bg-card p-4 shadow-[0_2px_12px_-6px_rgba(43,38,32,0.08)]"
+      >
         <input
           type="text"
           value={authorName}
@@ -58,60 +70,58 @@ export default function Comments({ postId }) {
           placeholder="닉네임"
           maxLength={30}
           required
-          className="w-40 rounded-lg border border-neutral-200 bg-transparent px-3 py-2 text-sm outline-none transition-colors focus:border-indigo-400 dark:border-neutral-800 dark:focus:border-indigo-500"
+          className={`${fieldClass} w-40`}
         />
         <textarea
           value={content}
           onChange={(e) => setContent(e.target.value)}
-          placeholder="댓글을 남겨주세요"
+          placeholder="따뜻한 한마디를 남겨주세요"
           rows={3}
           maxLength={1000}
           required
-          className="w-full resize-y rounded-lg border border-neutral-200 bg-transparent px-3 py-2 text-sm leading-relaxed outline-none transition-colors focus:border-indigo-400 dark:border-neutral-800 dark:focus:border-indigo-500"
+          className={`${fieldClass} w-full resize-y leading-relaxed`}
         />
         <div className="flex items-center justify-end gap-3">
           {addMutation.isError && (
-            <p className="text-xs text-red-500">댓글 등록에 실패했습니다.</p>
+            <p className="text-xs text-clay-strong">댓글 등록에 실패했어요.</p>
           )}
           <button
             type="submit"
             disabled={addMutation.isPending}
-            className="rounded-lg bg-neutral-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-neutral-700 disabled:opacity-50 dark:bg-neutral-100 dark:text-neutral-900 dark:hover:bg-neutral-300"
+            className="rounded-lg bg-clay px-4 py-2 text-sm font-medium text-[#fdf9f3] transition-colors duration-200 hover:bg-clay-strong disabled:opacity-50"
           >
-            {addMutation.isPending ? '등록 중…' : '댓글 등록'}
+            {addMutation.isPending ? '남기는 중…' : '남기기'}
           </button>
         </div>
       </form>
 
       <ul className="mt-8 space-y-6">
-        {isLoading && (
-          <li className="text-sm text-neutral-400">댓글을 불러오는 중…</li>
-        )}
+        {isLoading && <li className="text-sm text-faded">댓글을 불러오는 중…</li>}
         {!isLoading && comments.length === 0 && (
-          <li className="text-sm text-neutral-400 dark:text-neutral-500">
-            아직 댓글이 없습니다. 첫 댓글을 남겨보세요.
+          <li className="text-sm text-faded">
+            아직 남겨진 이야기가 없어요. 첫 마디를 건네보세요.
           </li>
         )}
         {comments.map((comment) => (
           <li key={comment.id}>
             <div className="flex items-baseline gap-2">
-              <span className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
+              <span className="text-sm font-medium text-ink">
                 {comment.author_name}
               </span>
-              <time className="text-xs text-neutral-400 dark:text-neutral-500">
+              <time className="text-xs text-faded tabular-nums">
                 {formatDate(comment.created_at)}
               </time>
               {session && (
                 <button
                   type="button"
                   onClick={() => deleteMutation.mutate(comment.id)}
-                  className="ml-auto text-xs text-neutral-400 transition-colors hover:text-red-500"
+                  className="ml-auto text-xs text-faded transition-colors duration-200 hover:text-clay-strong"
                 >
                   삭제
                 </button>
               )}
             </div>
-            <p className="mt-1 text-sm leading-relaxed whitespace-pre-wrap text-neutral-600 dark:text-neutral-300">
+            <p className="mt-1 text-sm leading-relaxed whitespace-pre-wrap text-body">
               {comment.content}
             </p>
           </li>
