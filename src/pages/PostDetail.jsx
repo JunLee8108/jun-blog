@@ -1,7 +1,8 @@
 import { useEffect, useMemo } from 'react'
-import { Link, useParams } from 'react-router-dom'
-import { useQuery } from '@tanstack/react-query'
-import { fetchPostBySlug, incrementViewCount } from '../lib/queries'
+import { Link, useNavigate, useParams } from 'react-router-dom'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { deletePost, fetchPostBySlug, incrementViewCount } from '../lib/queries'
+import { useAuth } from '../context/AuthContext'
 import {
   extractHeadings,
   formatDate,
@@ -52,11 +53,28 @@ function TableOfContents({ headings }) {
 
 export default function PostDetail() {
   const { slug } = useParams()
+  const { session } = useAuth()
+  const navigate = useNavigate()
+  const queryClient = useQueryClient()
 
   const { data: post, isLoading, isError } = useQuery({
     queryKey: ['post', slug],
     queryFn: () => fetchPostBySlug(slug),
   })
+
+  const deleteMutation = useMutation({
+    mutationFn: deletePost,
+    onSuccess: () => {
+      queryClient.invalidateQueries()
+      navigate('/', { replace: true })
+    },
+  })
+
+  const handleDelete = () => {
+    if (window.confirm(`"${post.title}" 글을 삭제할까요? 되돌릴 수 없어요.`)) {
+      deleteMutation.mutate(post.id)
+    }
+  }
 
   usePageTitle(post?.title)
 
@@ -79,12 +97,32 @@ export default function PostDetail() {
 
   return (
     <article>
-      <Link
-        to="/"
-        className="mb-10 inline-flex items-center gap-1 text-sm text-faded transition-colors duration-200 hover:text-clay"
-      >
-        ← 목록으로
-      </Link>
+      <div className="mb-10 flex items-center justify-between">
+        <Link
+          to="/"
+          className="inline-flex items-center gap-1 text-sm text-faded transition-colors duration-200 hover:text-clay"
+        >
+          ← 목록으로
+        </Link>
+        {session && (
+          <div className="flex gap-2 text-xs">
+            <Link
+              to={`/admin/edit/${post.id}`}
+              className="rounded-md border border-line px-2.5 py-1.5 text-body transition-colors duration-200 hover:border-faded"
+            >
+              수정
+            </Link>
+            <button
+              type="button"
+              onClick={handleDelete}
+              disabled={deleteMutation.isPending}
+              className="rounded-md border border-line px-2.5 py-1.5 text-clay-strong transition-colors duration-200 hover:border-clay/50 disabled:opacity-50"
+            >
+              {deleteMutation.isPending ? '삭제 중…' : '삭제'}
+            </button>
+          </div>
+        )}
+      </div>
 
       <header className="mb-10">
         {/* 일기니까 날짜부터 */}
