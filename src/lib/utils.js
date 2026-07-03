@@ -29,6 +29,28 @@ export function readingTime(content = '') {
   return `${minutes}분`
 }
 
+// 요약이 없는 글: 본문에서 서식을 걷어내고 앞부분을 자동 요약으로 사용
+export function autoExcerpt(content = '', format = 'markdown', maxLength = 160) {
+  let text
+  if (format === 'html') {
+    const body = new DOMParser().parseFromString(content, 'text/html').body
+    // 제목·코드블록·이미지는 요약에 어울리지 않으니 제외
+    body
+      .querySelectorAll('h1, h2, h3, h4, h5, h6, pre, figure, img')
+      .forEach((el) => el.remove())
+    text = Array.from(body.children, (el) => el.textContent).join(' ')
+  } else {
+    text = content
+      .replace(/```[\s\S]*?```/g, ' ') // 코드블록
+      .replace(/^#{1,6}\s.*$/gm, ' ') // 제목 줄
+      .replace(/!\[[^\]]*\]\([^)]*\)/g, ' ') // 이미지
+      .replace(/\[([^\]]*)\]\([^)]*\)/g, '$1') // 링크는 텍스트만
+      .replace(/[*_~`>]/g, '')
+  }
+  text = text.replace(/\s+/g, ' ').trim()
+  return text.length > maxLength ? `${text.slice(0, maxLength)}…` : text
+}
+
 // 리치 에디터(HTML) 글: sanitize + 제목에 앵커 id 부여 + 목차 추출
 export function prepareHtml(html = '') {
   const clean = DOMPurify.sanitize(html)
