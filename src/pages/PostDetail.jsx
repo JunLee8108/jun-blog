@@ -1,7 +1,13 @@
 import { useEffect, useMemo } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { deletePost, fetchPostBySlug, incrementViewCount } from '../lib/queries'
+import {
+  deletePost,
+  fetchAdjacentPosts,
+  fetchPostBySlug,
+  fetchRelatedPosts,
+  incrementViewCount,
+} from '../lib/queries'
 import { useAuth } from '../context/AuthContext'
 import {
   extractHeadings,
@@ -15,6 +21,8 @@ import TagBadge from '../components/TagBadge'
 import Spinner, { EmptyState, ErrorMessage } from '../components/Spinner'
 import Comments from '../components/Comments'
 import ShareButton from '../components/ShareButton'
+import LikeButton from '../components/LikeButton'
+import ReadingProgress from '../components/ReadingProgress'
 import { Ornament } from '../components/Doodles'
 import usePageTitle from '../hooks/usePageTitle'
 
@@ -49,6 +57,81 @@ function TableOfContents({ headings }) {
         ))}
       </ul>
     </nav>
+  )
+}
+
+/* 이전/다음 글 + 같은 태그의 다른 글 */
+function PostFooterNav({ post }) {
+  const { data: adjacent } = useQuery({
+    queryKey: ['adjacent', post.slug],
+    queryFn: () => fetchAdjacentPosts(post.published_at),
+    enabled: Boolean(post.published_at),
+  })
+
+  const tagSlugs = post.tags?.map((t) => t.slug) || []
+  const { data: related } = useQuery({
+    queryKey: ['related', post.id],
+    queryFn: () => fetchRelatedPosts(post.id, tagSlugs),
+    enabled: tagSlugs.length > 0,
+  })
+
+  // 이전/다음에 이미 나온 글은 관련 글에서 제외
+  const adjacentSlugs = [adjacent?.prev?.slug, adjacent?.next?.slug]
+  const relatedPosts =
+    related?.filter((r) => !adjacentSlugs.includes(r.slug)) || []
+
+  const cardClass =
+    'block rounded-xl border border-line px-4 py-3 transition-colors duration-200 hover:border-clay/50'
+
+  return (
+    <>
+      {(adjacent?.prev || adjacent?.next) && (
+        <nav aria-label="이전/다음 글" className="mt-12 grid gap-3 sm:grid-cols-2">
+          {adjacent.prev ? (
+            <Link to={`/posts/${adjacent.prev.slug}`} className={cardClass}>
+              <p className="text-xs text-faded">← 이전 이야기</p>
+              <p className="mt-1 truncate text-sm font-medium text-ink">
+                {adjacent.prev.title}
+              </p>
+            </Link>
+          ) : (
+            <span aria-hidden="true" />
+          )}
+          {adjacent.next && (
+            <Link
+              to={`/posts/${adjacent.next.slug}`}
+              className={`${cardClass} text-right`}
+            >
+              <p className="text-xs text-faded">다음 이야기 →</p>
+              <p className="mt-1 truncate text-sm font-medium text-ink">
+                {adjacent.next.title}
+              </p>
+            </Link>
+          )}
+        </nav>
+      )}
+
+      {relatedPosts.length > 0 && (
+        <section className="mt-10">
+          <h2 className="text-sm font-medium text-faded">이런 이야기도 있어요</h2>
+          <ul className="mt-3 space-y-2">
+            {relatedPosts.map((relatedPost) => (
+              <li key={relatedPost.id} className="flex items-baseline gap-3">
+                <Link
+                  to={`/posts/${relatedPost.slug}`}
+                  className="truncate text-[15px] text-ink transition-colors duration-200 hover:text-clay"
+                >
+                  {relatedPost.title}
+                </Link>
+                <time className="shrink-0 text-xs text-faded tabular-nums">
+                  {formatDate(relatedPost.published_at)}
+                </time>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+    </>
   )
 }
 
@@ -98,6 +181,7 @@ export default function PostDetail() {
 
   return (
     <article>
+      <ReadingProgress />
       <div className="mb-10 flex items-center justify-between">
         <Link
           to="/"
@@ -167,8 +251,20 @@ export default function PostDetail() {
 
       {/* 글의 끝맺음 */}
       <Ornament className="mt-14 mb-8 text-clay/60" />
-      <ShareButton title={post.title} text={post.excerpt} variant="footer" />
-      <Comments postId={post.id} />
+      <div className="mb-6 flex flex-col items-center gap-4">
+        <p className="text-sm text-faded">
+          이 글이 마음에 들었다면, 마음을 남기거나 누군가에게 건네주세요
+        </p>
+        <div className="flex gap-2">
+          <LikeButton slug={post.slug} initialCount={post.like_count || 0} />
+          <ShareButton title={post.title} text={post.excerpt} variant="pill" />
+        </div>
+      </div>
+
+      <PostFooterNav post={post} />
+      <div className="mt-12 border-t border-dashed border-line pt-8">
+        <Comments postId={post.id} />
+      </div>
     </article>
   )
 }

@@ -357,10 +357,11 @@ function Toolbar({ editor }) {
   )
 }
 
-export default function RichEditor({ initialContent, editorRef }) {
+export default function RichEditor({ initialContent, editorRef, onUpdate }) {
   const [, forceUpdate] = useReducer((x) => x + 1, 0)
 
   const editor = useEditor({
+    onUpdate: () => onUpdate?.(),
     extensions: [
       StarterKit.configure({
         heading: { levels: [1, 2, 3] },
