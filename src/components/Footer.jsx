@@ -7,7 +7,7 @@ export default function Footer() {
 
   return (
     <footer className="border-t border-dashed border-line">
-      <div className="mx-auto max-w-4xl px-4 py-10 sm:px-6">
+      <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6">
         <p className="text-sm text-faded">
           오늘도 읽어주셔서 고마워요 —{' '}
           <span className="font-medium text-ink">Jun</span>

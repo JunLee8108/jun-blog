@@ -10,7 +10,7 @@ export default function Layout() {
       <Header />
       <main
         key={location.pathname}
-        className="fade-up mx-auto w-full max-w-4xl flex-1 px-4 py-12 sm:px-6"
+        className="fade-up mx-auto w-full max-w-3xl flex-1 px-4 py-12 sm:px-6"
       >
         <Outlet />
       </main>
