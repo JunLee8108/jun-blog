@@ -1,9 +1,10 @@
 import { Link } from 'react-router-dom'
-import { formatDate, readingTime, relativeDate } from '../lib/utils'
+import { autoExcerpt, formatDate, readingTime, relativeDate } from '../lib/utils'
 import TagBadge from './TagBadge'
 
 export default function PostCard({ post }) {
   const relative = relativeDate(post.published_at)
+  const summary = post.excerpt || autoExcerpt(post.content, post.format)
 
   return (
     <article className="group flex items-start gap-5 py-8 first:pt-0 sm:gap-7">
@@ -20,9 +21,9 @@ export default function PostCard({ post }) {
             </span>
           </Link>
         </h2>
-        {post.excerpt && (
+        {summary && (
           <p className="mt-2.5 line-clamp-2 text-[15px] leading-relaxed text-body/85">
-            {post.excerpt}
+            {summary}
           </p>
         )}
         {post.tags?.length > 0 && (
