@@ -46,7 +46,7 @@ export default function PostCard({ post }) {
             src={post.cover_image_url}
             alt=""
             loading="lazy"
-            className="h-20 w-28 -rotate-1 rounded-lg object-cover ring-1 ring-line transition-transform duration-300 group-hover:rotate-0 sm:h-24 sm:w-36"
+            className="h-20 w-28 rounded-lg object-cover ring-1 ring-line sm:h-24 sm:w-36"
           />
         </Link>
       )}

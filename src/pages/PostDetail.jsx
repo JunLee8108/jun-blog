@@ -110,7 +110,7 @@ export default function PostDetail() {
         )}
         {/* 폴라로이드 커버 */}
         {post.cover_image_url && (
-          <figure className="mt-10 -rotate-1 transition-transform duration-300 hover:rotate-0">
+          <figure className="mt-10">
             <div className="rounded-md bg-card p-3 pb-4 shadow-[0_14px_35px_-14px_rgba(43,38,32,0.3)] ring-1 ring-line">
               <img
                 src={post.cover_image_url}
