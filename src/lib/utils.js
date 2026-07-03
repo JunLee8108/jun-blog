@@ -1,4 +1,5 @@
 import GithubSlugger from 'github-slugger'
+import DOMPurify from 'dompurify'
 
 export function formatDate(dateString) {
   if (!dateString) return ''
@@ -20,11 +21,30 @@ export function relativeDate(dateString) {
   return `${days}일 전`
 }
 
-// 한글 기준 분당 약 500자로 계산
+// 한글 기준 분당 약 500자로 계산 (HTML 본문은 태그를 제외하고 셈)
 export function readingTime(content = '') {
-  const chars = content.replace(/\s/g, '').length
+  const text = content.replace(/<[^>]*>/g, ' ')
+  const chars = text.replace(/\s/g, '').length
   const minutes = Math.max(1, Math.round(chars / 500))
   return `${minutes}분`
+}
+
+// 리치 에디터(HTML) 글: sanitize + 제목에 앵커 id 부여 + 목차 추출
+export function prepareHtml(html = '') {
+  const clean = DOMPurify.sanitize(html)
+  const doc = new DOMParser().parseFromString(clean, 'text/html')
+  const slugger = new GithubSlugger()
+  const headings = []
+
+  doc.querySelectorAll('h1, h2, h3').forEach((el) => {
+    const text = el.textContent.trim()
+    if (!text) return
+    const id = slugger.slug(text)
+    el.id = id
+    headings.push({ depth: Number(el.tagName[1]), text, id })
+  })
+
+  return { html: doc.body.innerHTML, headings }
 }
 
 export function slugify(text) {

@@ -1,17 +1,15 @@
 import { useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { marked } from 'marked'
 import { fetchPostById, savePost, uploadImage } from '../../lib/queries'
 import { slugify } from '../../lib/utils'
-import Markdown from '../../components/Markdown'
+import RichEditor from '../../components/RichEditor'
 import Spinner, { ErrorMessage } from '../../components/Spinner'
 import usePageTitle from '../../hooks/usePageTitle'
 
 const inputClass =
   'w-full rounded-lg border border-line bg-card px-3 py-2.5 text-sm outline-none transition-colors duration-200 focus:border-clay/60'
-
-const uploadButtonClass =
-  'cursor-pointer rounded-lg border border-line px-3 py-1.5 text-sm text-body transition-colors duration-200 hover:border-faded'
 
 function Field({ label, hint, children }) {
   return (
@@ -29,18 +27,23 @@ function EditorForm({ post }) {
   const isEdit = Boolean(post)
   const navigate = useNavigate()
   const queryClient = useQueryClient()
-  const contentRef = useRef(null)
+  const editorRef = useRef(null)
 
   const [title, setTitle] = useState(post?.title || '')
   const [excerpt, setExcerpt] = useState(post?.excerpt || '')
-  const [content, setContent] = useState(post?.content || '')
   const [tagsInput, setTagsInput] = useState(
     post?.tags?.map((t) => t.name).join(', ') || '',
   )
   const [coverImageUrl, setCoverImageUrl] = useState(post?.cover_image_url || '')
-  const [showPreview, setShowPreview] = useState(false)
   const [uploading, setUploading] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
+
+  // 예전 마크다운 글은 열 때 HTML로 변환해서 리치 에디터로 이어서 편집
+  const initialContent = post
+    ? post.format === 'html'
+      ? post.content
+      : marked.parse(post.content || '', { breaks: true, gfm: true })
+    : ''
 
   const saveMutation = useMutation({
     mutationFn: savePost,
@@ -52,7 +55,8 @@ function EditorForm({ post }) {
   })
 
   const handleSave = (status) => {
-    if (!title.trim() || !content.trim()) {
+    const editor = editorRef.current
+    if (!title.trim() || !editor || editor.isEmpty) {
       setErrorMessage('제목과 본문을 입력해 주세요.')
       return
     }
@@ -63,7 +67,8 @@ function EditorForm({ post }) {
         title: title.trim(),
         slug: isEdit ? post.slug : slugify(title),
         excerpt: excerpt.trim(),
-        content,
+        content: editor.getHTML(),
+        format: 'html',
         cover_image_url: coverImageUrl || null,
         status,
         published_at: post?.published_at || null,
@@ -72,20 +77,12 @@ function EditorForm({ post }) {
     })
   }
 
-  const handleImageUpload = async (file, asCover = false) => {
+  const handleCoverUpload = async (file) => {
     if (!file) return
     setUploading(true)
     setErrorMessage('')
     try {
-      const url = await uploadImage(file)
-      if (asCover) {
-        setCoverImageUrl(url)
-      } else {
-        const textarea = contentRef.current
-        const markdownImage = `\n![](${url})\n`
-        const pos = textarea?.selectionStart ?? content.length
-        setContent((prev) => prev.slice(0, pos) + markdownImage + prev.slice(pos))
-      }
+      setCoverImageUrl(await uploadImage(file))
     } catch (error) {
       setErrorMessage(`이미지 업로드에 실패했습니다: ${error.message}`)
     } finally {
@@ -95,19 +92,9 @@ function EditorForm({ post }) {
 
   return (
     <>
-      <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-xl font-semibold text-ink">
-          {isEdit ? '글 수정' : '새 글 쓰기'}
-        </h1>
-        {/* 데스크톱(lg+)은 항상 나란히 보이므로 토글은 그 아래에서만 */}
-        <button
-          type="button"
-          onClick={() => setShowPreview((v) => !v)}
-          className="rounded-lg border border-line px-3 py-1.5 text-sm text-body transition-colors duration-200 hover:border-faded lg:hidden"
-        >
-          {showPreview ? '편집' : '미리보기'}
-        </button>
-      </div>
+      <h1 className="mb-6 text-xl font-semibold text-ink">
+        {isEdit ? '글 수정' : '새 글 쓰기'}
+      </h1>
 
       <div className="space-y-5">
         <Field label="제목">
@@ -148,13 +135,13 @@ function EditorForm({ post }) {
             </span>
           </span>
           <div className="flex flex-wrap items-center gap-3 text-sm">
-            <label className={uploadButtonClass}>
+            <label className="cursor-pointer rounded-lg border border-line px-3 py-1.5 text-body transition-colors duration-200 hover:border-faded">
               {coverImageUrl ? '커버 바꾸기' : '이미지 올리기'}
               <input
                 type="file"
                 accept="image/*"
                 className="hidden"
-                onChange={(e) => handleImageUpload(e.target.files[0], true)}
+                onChange={(e) => handleCoverUpload(e.target.files[0])}
               />
             </label>
             {coverImageUrl && (
@@ -178,50 +165,13 @@ function EditorForm({ post }) {
         </div>
 
         <div>
-          <div className="mb-1.5 flex items-baseline justify-between">
-            <span className="flex items-baseline gap-1.5 text-[13px] font-medium text-ink">
-              본문
-              <span className="font-normal text-faded">
-                마크다운 · 이미지는 미리보기에 바로 보여요
-              </span>
+          <span className="mb-1.5 flex items-baseline gap-1.5 text-[13px] font-medium text-ink">
+            본문
+            <span className="font-normal text-faded">
+              이미지는 붙여넣기·드래그로도 넣을 수 있어요
             </span>
-            <label className="cursor-pointer text-[13px] text-clay transition-colors duration-200 hover:text-clay-strong">
-              + 본문에 이미지 삽입
-              <input
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={(e) => handleImageUpload(e.target.files[0])}
-              />
-            </label>
-          </div>
-
-          {/* 데스크톱: 편집·미리보기 나란히 (넓게 브레이크아웃) */}
-          <div className="grid gap-4 lg:-mx-24 lg:grid-cols-2 xl:-mx-40">
-            <textarea
-              ref={contentRef}
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-              placeholder="본문을 마크다운으로 작성하세요…"
-              rows={22}
-              className={`${inputClass} resize-y font-mono text-[13px] leading-relaxed ${
-                showPreview ? 'hidden lg:block' : ''
-              }`}
-            />
-            <div
-              className={`max-h-[75vh] min-h-96 overflow-y-auto rounded-lg border border-line bg-card px-5 py-4 ${
-                showPreview ? '' : 'hidden lg:block'
-              }`}
-            >
-              {content ? (
-                <Markdown content={content} />
-              ) : (
-                <p className="text-sm text-faded">
-                  본문을 쓰면 여기에 바로 미리보여요.
-                </p>
-              )}
-            </div>
-          </div>
+          </span>
+          <RichEditor initialContent={initialContent} editorRef={editorRef} />
         </div>
 
         {errorMessage && <p className="text-sm text-clay-strong">{errorMessage}</p>}

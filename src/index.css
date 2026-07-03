@@ -185,3 +185,22 @@ body {
 .prose :not(pre) > code::after {
   content: none;
 }
+
+/* ── 리치 에디터(TipTap) ─────────────────────────────────────── */
+.tiptap :first-child {
+  margin-top: 0;
+}
+
+.tiptap p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  pointer-events: none;
+  color: var(--faded);
+}
+
+.tiptap img.ProseMirror-selectednode {
+  outline: 2px solid var(--clay);
+  outline-offset: 2px;
+  border-radius: 12px;
+}

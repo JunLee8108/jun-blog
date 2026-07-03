@@ -5,6 +5,7 @@ import { fetchPostBySlug, incrementViewCount } from '../lib/queries'
 import {
   extractHeadings,
   formatDate,
+  prepareHtml,
   readingTime,
   relativeDate,
 } from '../lib/utils'
@@ -63,10 +64,12 @@ export default function PostDetail() {
     if (post?.id) incrementViewCount(slug)
   }, [post?.id, slug])
 
-  const headings = useMemo(
-    () => (post ? extractHeadings(post.content) : []),
-    [post],
-  )
+  // 리치 에디터 글은 HTML, 예전 글은 마크다운
+  const prepared = useMemo(() => {
+    if (!post) return { html: null, headings: [] }
+    if (post.format === 'html') return prepareHtml(post.content)
+    return { html: null, headings: extractHeadings(post.content) }
+  }, [post])
 
   if (isLoading) return <Spinner />
   if (isError) return <ErrorMessage />
@@ -111,19 +114,26 @@ export default function PostDetail() {
         {/* 폴라로이드 커버 */}
         {post.cover_image_url && (
           <figure className="mt-10">
-            <div className="rounded-md bg-card p-3 pb-4 shadow-[0_14px_35px_-14px_rgba(43,38,32,0.3)] ring-1 ring-line">
+            <div className="rounded-md bg-card p-2 shadow-[0_10px_28px_-14px_rgba(43,38,32,0.3)] ring-1 ring-line">
               <img
                 src={post.cover_image_url}
                 alt=""
-                className="w-full rounded-[3px] object-cover"
+                className="max-h-80 w-full rounded-[3px] object-cover"
               />
             </div>
           </figure>
         )}
       </header>
 
-      <TableOfContents headings={headings} />
-      <Markdown content={post.content} />
+      <TableOfContents headings={prepared.headings} />
+      {prepared.html !== null ? (
+        <div
+          className="prose max-w-none"
+          dangerouslySetInnerHTML={{ __html: prepared.html }}
+        />
+      ) : (
+        <Markdown content={post.content} />
+      )}
 
       {/* 글의 끝맺음 */}
       <Ornament className="my-14 text-clay/60" />
