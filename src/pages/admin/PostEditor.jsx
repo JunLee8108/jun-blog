@@ -10,6 +10,21 @@ import usePageTitle from '../../hooks/usePageTitle'
 const inputClass =
   'w-full rounded-lg border border-line bg-card px-3 py-2.5 text-sm outline-none transition-colors duration-200 focus:border-clay/60'
 
+const uploadButtonClass =
+  'cursor-pointer rounded-lg border border-line px-3 py-1.5 text-sm text-body transition-colors duration-200 hover:border-faded'
+
+function Field({ label, hint, children }) {
+  return (
+    <label className="block">
+      <span className="mb-1.5 flex items-baseline gap-1.5 text-[13px] font-medium text-ink">
+        {label}
+        {hint && <span className="font-normal text-faded">{hint}</span>}
+      </span>
+      {children}
+    </label>
+  )
+}
+
 function EditorForm({ post }) {
   const isEdit = Boolean(post)
   const navigate = useNavigate()
@@ -84,61 +99,65 @@ function EditorForm({ post }) {
         <h1 className="text-xl font-semibold text-ink">
           {isEdit ? '글 수정' : '새 글 쓰기'}
         </h1>
+        {/* 데스크톱(lg+)은 항상 나란히 보이므로 토글은 그 아래에서만 */}
         <button
           type="button"
           onClick={() => setShowPreview((v) => !v)}
-          className="rounded-lg border border-line px-3 py-1.5 text-sm text-body transition-colors duration-200 hover:border-faded"
+          className="rounded-lg border border-line px-3 py-1.5 text-sm text-body transition-colors duration-200 hover:border-faded lg:hidden"
         >
           {showPreview ? '편집' : '미리보기'}
         </button>
       </div>
 
-      <div className="space-y-4">
-        <input
-          type="text"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          placeholder="제목"
-          className={`${inputClass} text-lg font-semibold`}
-        />
-        <input
-          type="text"
-          value={excerpt}
-          onChange={(e) => setExcerpt(e.target.value)}
-          placeholder="요약 (목록에 표시됩니다)"
-          className={inputClass}
-        />
-        <input
-          type="text"
-          value={tagsInput}
-          onChange={(e) => setTagsInput(e.target.value)}
-          placeholder="태그 (쉼표로 구분: 일상, 개발)"
-          className={inputClass}
-        />
+      <div className="space-y-5">
+        <Field label="제목">
+          <input
+            type="text"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            placeholder="오늘의 이야기"
+            className={`${inputClass} text-lg font-semibold`}
+          />
+        </Field>
 
-        <div className="flex flex-wrap items-center gap-3 text-sm">
-          <label className="cursor-pointer rounded-lg border border-line px-3 py-1.5 text-body transition-colors duration-200 hover:border-faded">
+        <Field label="요약" hint="홈 목록에 표시돼요">
+          <input
+            type="text"
+            value={excerpt}
+            onChange={(e) => setExcerpt(e.target.value)}
+            placeholder="글을 한두 문장으로 소개해 주세요"
+            className={inputClass}
+          />
+        </Field>
+
+        <Field label="태그" hint="쉼표로 구분">
+          <input
+            type="text"
+            value={tagsInput}
+            onChange={(e) => setTagsInput(e.target.value)}
+            placeholder="일상, 개발"
+            className={inputClass}
+          />
+        </Field>
+
+        <div>
+          <span className="mb-1.5 flex items-baseline gap-1.5 text-[13px] font-medium text-ink">
             커버 이미지
-            <input
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={(e) => handleImageUpload(e.target.files[0], true)}
-            />
-          </label>
-          <label className="cursor-pointer rounded-lg border border-line px-3 py-1.5 text-body transition-colors duration-200 hover:border-faded">
-            본문에 이미지 삽입
-            <input
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={(e) => handleImageUpload(e.target.files[0])}
-            />
-          </label>
-          {uploading && <span className="text-faded">업로드 중…</span>}
-          {coverImageUrl && (
-            <span className="flex items-center gap-2 text-faded">
-              커버 설정됨
+            <span className="font-normal text-faded">
+              홈 목록과 글 상단에 보여요
+            </span>
+          </span>
+          <div className="flex flex-wrap items-center gap-3 text-sm">
+            <label className={uploadButtonClass}>
+              {coverImageUrl ? '커버 바꾸기' : '이미지 올리기'}
+              <input
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => handleImageUpload(e.target.files[0], true)}
+              />
+            </label>
+            {coverImageUrl && (
               <button
                 type="button"
                 onClick={() => setCoverImageUrl('')}
@@ -146,36 +165,64 @@ function EditorForm({ post }) {
               >
                 제거
               </button>
-            </span>
+            )}
+            {uploading && <span className="text-faded">업로드 중…</span>}
+          </div>
+          {coverImageUrl && (
+            <img
+              src={coverImageUrl}
+              alt="커버 이미지 미리보기"
+              className="mt-3 max-h-56 rounded-xl object-cover ring-1 ring-line"
+            />
           )}
         </div>
 
-        {coverImageUrl && (
-          <img
-            src={coverImageUrl}
-            alt="커버 이미지 미리보기"
-            className="max-h-56 rounded-xl object-cover"
-          />
-        )}
-
-        {showPreview ? (
-          <div className="min-h-96 rounded-lg border border-line bg-card px-5 py-4">
-            {content ? (
-              <Markdown content={content} />
-            ) : (
-              <p className="text-sm text-faded">본문이 비어 있어요.</p>
-            )}
+        <div>
+          <div className="mb-1.5 flex items-baseline justify-between">
+            <span className="flex items-baseline gap-1.5 text-[13px] font-medium text-ink">
+              본문
+              <span className="font-normal text-faded">
+                마크다운 · 이미지는 미리보기에 바로 보여요
+              </span>
+            </span>
+            <label className="cursor-pointer text-[13px] text-clay transition-colors duration-200 hover:text-clay-strong">
+              + 본문에 이미지 삽입
+              <input
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => handleImageUpload(e.target.files[0])}
+              />
+            </label>
           </div>
-        ) : (
-          <textarea
-            ref={contentRef}
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
-            placeholder="본문을 마크다운으로 작성하세요…"
-            rows={20}
-            className={`${inputClass} resize-y font-mono text-[13px] leading-relaxed`}
-          />
-        )}
+
+          {/* 데스크톱: 편집·미리보기 나란히 (넓게 브레이크아웃) */}
+          <div className="grid gap-4 lg:-mx-24 lg:grid-cols-2 xl:-mx-40">
+            <textarea
+              ref={contentRef}
+              value={content}
+              onChange={(e) => setContent(e.target.value)}
+              placeholder="본문을 마크다운으로 작성하세요…"
+              rows={22}
+              className={`${inputClass} resize-y font-mono text-[13px] leading-relaxed ${
+                showPreview ? 'hidden lg:block' : ''
+              }`}
+            />
+            <div
+              className={`max-h-[75vh] min-h-96 overflow-y-auto rounded-lg border border-line bg-card px-5 py-4 ${
+                showPreview ? '' : 'hidden lg:block'
+              }`}
+            >
+              {content ? (
+                <Markdown content={content} />
+              ) : (
+                <p className="text-sm text-faded">
+                  본문을 쓰면 여기에 바로 미리보여요.
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
 
         {errorMessage && <p className="text-sm text-clay-strong">{errorMessage}</p>}
 
