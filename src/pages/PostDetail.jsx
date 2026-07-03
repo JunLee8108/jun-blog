@@ -14,6 +14,7 @@ import Markdown from '../components/Markdown'
 import TagBadge from '../components/TagBadge'
 import Spinner, { EmptyState, ErrorMessage } from '../components/Spinner'
 import Comments from '../components/Comments'
+import ShareButton from '../components/ShareButton'
 import { Ornament } from '../components/Doodles'
 import usePageTitle from '../hooks/usePageTitle'
 
@@ -104,24 +105,27 @@ export default function PostDetail() {
         >
           ← 목록으로
         </Link>
-        {session && (
-          <div className="flex gap-2 text-xs">
-            <Link
-              to={`/admin/edit/${post.id}`}
-              className="rounded-md border border-line px-2.5 py-1.5 text-body transition-colors duration-200 hover:border-faded"
-            >
-              수정
-            </Link>
-            <button
-              type="button"
-              onClick={handleDelete}
-              disabled={deleteMutation.isPending}
-              className="rounded-md border border-line px-2.5 py-1.5 text-clay-strong transition-colors duration-200 hover:border-clay/50 disabled:opacity-50"
-            >
-              {deleteMutation.isPending ? '삭제 중…' : '삭제'}
-            </button>
-          </div>
-        )}
+        <div className="flex gap-2 text-xs">
+          <ShareButton title={post.title} text={post.excerpt} />
+          {session && (
+            <>
+              <Link
+                to={`/admin/edit/${post.id}`}
+                className="rounded-md border border-line px-2.5 py-1.5 text-body transition-colors duration-200 hover:border-faded"
+              >
+                수정
+              </Link>
+              <button
+                type="button"
+                onClick={handleDelete}
+                disabled={deleteMutation.isPending}
+                className="rounded-md border border-line px-2.5 py-1.5 text-clay-strong transition-colors duration-200 hover:border-clay/50 disabled:opacity-50"
+              >
+                {deleteMutation.isPending ? '삭제 중…' : '삭제'}
+              </button>
+            </>
+          )}
+        </div>
       </div>
 
       <header className="mb-10">
@@ -162,7 +166,8 @@ export default function PostDetail() {
       )}
 
       {/* 글의 끝맺음 */}
-      <Ornament className="my-14 text-clay/60" />
+      <Ornament className="mt-14 mb-8 text-clay/60" />
+      <ShareButton title={post.title} text={post.excerpt} variant="footer" />
       <Comments postId={post.id} />
     </article>
   )
