@@ -16,6 +16,7 @@ create table if not exists public.posts (
   status text not null default 'draft' check (status in ('draft', 'published')),
   published_at timestamptz,
   view_count integer not null default 0,
+  like_count integer not null default 0,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
@@ -102,6 +103,21 @@ as $$
 $$;
 
 grant execute on function public.increment_view_count(text) to anon, authenticated;
+
+-- 공감(마음) 토글: delta의 부호만 반영(±1)
+create or replace function public.toggle_like(post_slug text, delta integer)
+returns integer
+language sql
+security definer
+set search_path = public
+as $$
+  update public.posts
+  set like_count = greatest(0, like_count + sign(delta)::integer)
+  where slug = post_slug and status = 'published'
+  returning like_count;
+$$;
+
+grant execute on function public.toggle_like(text, integer) to anon, authenticated;
 
 -- 4. 이미지 스토리지 버킷 ----------------------------------------
 

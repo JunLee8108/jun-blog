@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { marked } from 'marked'
@@ -38,6 +38,62 @@ function EditorForm({ post }) {
   const [uploading, setUploading] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
 
+  // ── 자동 임시저장 (localStorage) ─────────────────────────────
+  const draftKey = `draft_${post?.id || 'new'}`
+  const [draft] = useState(() => {
+    try {
+      const parsed = JSON.parse(localStorage.getItem(draftKey))
+      // 저장된 글보다 오래된 초안은 버린다
+      if (
+        parsed &&
+        post?.updated_at &&
+        parsed.savedAt < new Date(post.updated_at).getTime()
+      ) {
+        localStorage.removeItem(draftKey)
+        return null
+      }
+      return parsed
+    } catch {
+      return null
+    }
+  })
+  const [showRestore, setShowRestore] = useState(Boolean(draft))
+  const [contentVersion, setContentVersion] = useState(0)
+
+  useEffect(() => {
+    if (showRestore) return // 복구 여부를 정하기 전에는 초안을 덮어쓰지 않는다
+    const timer = setTimeout(() => {
+      const editor = editorRef.current
+      if (!title.trim() && (editor?.isEmpty ?? true)) return
+      localStorage.setItem(
+        draftKey,
+        JSON.stringify({
+          title,
+          excerpt,
+          tagsInput,
+          coverImageUrl,
+          content: editor?.getHTML() || '',
+          savedAt: Date.now(),
+        }),
+      )
+    }, 1500)
+    return () => clearTimeout(timer)
+  }, [title, excerpt, tagsInput, coverImageUrl, contentVersion, showRestore, draftKey])
+
+  const restoreDraft = () => {
+    setTitle(draft.title || '')
+    setExcerpt(draft.excerpt || '')
+    setTagsInput(draft.tagsInput || '')
+    setCoverImageUrl(draft.coverImageUrl || '')
+    editorRef.current?.commands.setContent(draft.content || '')
+    setShowRestore(false)
+  }
+
+  const discardDraft = () => {
+    localStorage.removeItem(draftKey)
+    setShowRestore(false)
+  }
+
   // 예전 마크다운 글은 열 때 HTML로 변환해서 리치 에디터로 이어서 편집
   const initialContent = post
     ? post.format === 'html'
@@ -48,6 +104,7 @@ function EditorForm({ post }) {
   const saveMutation = useMutation({
     mutationFn: savePost,
     onSuccess: () => {
+      localStorage.removeItem(draftKey)
       queryClient.invalidateQueries()
       navigate('/admin')
     },
@@ -95,6 +152,40 @@ function EditorForm({ post }) {
       <h1 className="mb-6 text-xl font-semibold text-ink">
         {isEdit ? '글 수정' : '새 글 쓰기'}
       </h1>
+
+      {showRestore && (
+        <div className="mb-5 flex flex-wrap items-center gap-3 rounded-xl border border-clay/30 bg-clay-soft px-4 py-3 text-sm">
+          <p className="text-body">
+            임시저장된 글이 있어요{' '}
+            <span className="text-faded">
+              (
+              {new Date(draft.savedAt).toLocaleString('ko-KR', {
+                month: 'long',
+                day: 'numeric',
+                hour: 'numeric',
+                minute: 'numeric',
+              })}
+              )
+            </span>
+          </p>
+          <div className="ml-auto flex gap-2">
+            <button
+              type="button"
+              onClick={restoreDraft}
+              className="rounded-lg bg-clay px-3 py-1.5 text-xs font-medium text-[#fdf9f3] transition-colors duration-200 hover:bg-clay-strong"
+            >
+              이어서 쓰기
+            </button>
+            <button
+              type="button"
+              onClick={discardDraft}
+              className="rounded-lg border border-line px-3 py-1.5 text-xs text-body transition-colors duration-200 hover:border-faded"
+            >
+              지우기
+            </button>
+          </div>
+        </div>
+      )}
 
       <div className="space-y-5">
         <Field label="제목">
@@ -171,7 +262,11 @@ function EditorForm({ post }) {
               이미지는 붙여넣기·드래그로도 넣을 수 있어요
             </span>
           </span>
-          <RichEditor initialContent={initialContent} editorRef={editorRef} />
+          <RichEditor
+            initialContent={initialContent}
+            editorRef={editorRef}
+            onUpdate={() => setContentVersion((v) => v + 1)}
+          />
         </div>
 
         {errorMessage && <p className="text-sm text-clay-strong">{errorMessage}</p>}

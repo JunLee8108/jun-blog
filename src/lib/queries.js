@@ -2,7 +2,7 @@ import { supabase } from './supabase'
 import { slugify } from './utils'
 
 const POST_LIST_FIELDS =
-  'id, title, slug, excerpt, content, format, cover_image_url, status, published_at, created_at, view_count, tags (id, name, slug)'
+  'id, title, slug, excerpt, content, format, cover_image_url, status, published_at, created_at, view_count, like_count, tags (id, name, slug)'
 
 export async function fetchPublishedPosts(search = '') {
   let query = supabase
@@ -63,6 +63,47 @@ export async function fetchPostById(id) {
 export function incrementViewCount(slug) {
   // 실패해도 화면에는 영향 없음 (fire-and-forget)
   supabase.rpc('increment_view_count', { post_slug: slug }).then(() => {})
+}
+
+export async function toggleLike(slug, delta) {
+  const { data, error } = await supabase.rpc('toggle_like', {
+    post_slug: slug,
+    delta,
+  })
+  if (error) throw error
+  return data
+}
+
+// 이전/다음 글 (발행 시각 기준)
+export async function fetchAdjacentPosts(publishedAt) {
+  const base = () =>
+    supabase
+      .from('posts')
+      .select('title, slug')
+      .eq('status', 'published')
+      .limit(1)
+
+  const [prevRes, nextRes] = await Promise.all([
+    base().lt('published_at', publishedAt).order('published_at', { ascending: false }),
+    base().gt('published_at', publishedAt).order('published_at', { ascending: true }),
+  ])
+  if (prevRes.error) throw prevRes.error
+  if (nextRes.error) throw nextRes.error
+  return { prev: prevRes.data[0] || null, next: nextRes.data[0] || null }
+}
+
+// 같은 태그의 다른 글
+export async function fetchRelatedPosts(postId, tagSlugs) {
+  const { data, error } = await supabase
+    .from('posts')
+    .select('id, title, slug, published_at, tags!inner (slug)')
+    .eq('status', 'published')
+    .neq('id', postId)
+    .in('tags.slug', tagSlugs)
+    .order('published_at', { ascending: false })
+    .limit(3)
+  if (error) throw error
+  return data
 }
 
 export async function fetchComments(postId) {
