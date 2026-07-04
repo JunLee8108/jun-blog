@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
@@ -60,7 +61,8 @@ function TableOfContents({ headings }) {
   )
 }
 
-/* 본문 이미지 클릭 시 크게 보기 */
+/* 본문 이미지 클릭 시 크게 보기
+   main의 fade-up transform이 fixed의 기준을 바꾸므로 body에 포털로 렌더링 */
 function Lightbox({ src, onClose }) {
   useEffect(() => {
     const onKey = (e) => e.key === 'Escape' && onClose()
@@ -72,7 +74,7 @@ function Lightbox({ src, onClose }) {
     }
   }, [onClose])
 
-  return (
+  return createPortal(
     <div
       role="dialog"
       aria-modal="true"
@@ -81,7 +83,8 @@ function Lightbox({ src, onClose }) {
       className="fade-up fixed inset-0 z-50 flex cursor-zoom-out items-center justify-center bg-[#181512]/90 p-4 backdrop-blur-sm sm:p-10"
     >
       <img src={src} alt="" className="max-h-full max-w-full rounded-xl" />
-    </div>
+    </div>,
+    document.body,
   )
 }
 
