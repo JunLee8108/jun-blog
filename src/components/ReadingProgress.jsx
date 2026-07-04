@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { createPortal } from 'react-dom'
 
 /* 스크롤에 따라 차오르는 상단 읽기 진행 바 */
 export default function ReadingProgress() {
@@ -25,11 +26,13 @@ export default function ReadingProgress() {
     }
   }, [])
 
-  return (
+  // main의 fade-up transform이 fixed의 기준을 바꾸므로 body에 포털로 렌더링
+  return createPortal(
     <div
       aria-hidden="true"
       className="fixed top-0 left-0 z-20 h-[3px] rounded-r-full bg-clay/80"
       style={{ width: `${progress * 100}%` }}
-    />
+    />,
+    document.body,
   )
 }
