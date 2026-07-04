@@ -21,7 +21,7 @@ export default function Home() {
   return (
     <>
       {/* 일기장 첫 장 */}
-      <section className="mb-12">
+      <section className="mb-14">
         <p className="text-[13px] font-medium tracking-[0.14em] text-clay">
           일상과 개발 사이
         </p>
@@ -34,14 +34,19 @@ export default function Home() {
         </p>
       </section>
 
-      {search && (
-        <p className="mb-6 text-sm text-faded">
-          <span className="font-medium text-clay">"{search}"</span> 검색 결과
-          {posts && (
-            <span className="tabular-nums"> — {posts.length}편</span>
-          )}
-        </p>
-      )}
+      {/* 목록 섹션 시작: 라벨 + 실선 (글 사이 점선과 역할 구분) */}
+      <div className="mb-7 border-b border-line pb-3">
+        {search ? (
+          <p className="text-sm text-faded">
+            <span className="font-medium text-clay">"{search}"</span> 검색 결과
+            {posts && <span className="tabular-nums"> — {posts.length}편</span>}
+          </p>
+        ) : (
+          <p className="text-[13px] font-medium tracking-[0.14em] text-clay">
+            최근 이야기
+          </p>
+        )}
+      </div>
 
       {isLoading && <Spinner />}
       {isError && <ErrorMessage />}
