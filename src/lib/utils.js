@@ -11,9 +11,14 @@ export function formatDate(dateString) {
 }
 
 // 일주일 안쪽 글에는 사람 말투의 상대 시간을 병기
+// 경과 시간(24시간)이 아니라 로컬 시간대의 달력 날짜(자정 경계) 기준으로 센다
 export function relativeDate(dateString) {
   if (!dateString) return null
-  const days = Math.floor((Date.now() - new Date(dateString).getTime()) / 86400000)
+  const startOfDay = (d) =>
+    new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime()
+  const days = Math.round(
+    (startOfDay(new Date()) - startOfDay(new Date(dateString))) / 86400000,
+  )
   if (days < 0 || days > 7) return null
   if (days === 0) return '오늘'
   if (days === 1) return '어제'
