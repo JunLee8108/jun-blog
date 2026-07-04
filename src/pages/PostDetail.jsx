@@ -80,13 +80,21 @@ function PostFooterNav({ post }) {
   const relatedPosts =
     related?.filter((r) => !adjacentSlugs.includes(r.slug)) || []
 
+  const hasAdjacent = Boolean(adjacent?.prev || adjacent?.next)
+  if (!hasAdjacent && relatedPosts.length === 0) return null
+
+  // 부록 카드: 서피스 배경으로 본문보다 낮은 계층임을 표현
   const cardClass =
-    'block rounded-xl border border-line px-4 py-3 transition-colors duration-200 hover:border-clay/50'
+    'block rounded-xl border border-line bg-card px-4 py-3 transition-colors duration-200 hover:border-clay/50'
 
   return (
-    <>
-      {(adjacent?.prev || adjacent?.next) && (
-        <nav aria-label="이전/다음 글" className="mt-12 grid gap-3 sm:grid-cols-2">
+    <section className="mt-12 border-t border-dashed border-line pt-10">
+      <p className="text-[13px] font-medium tracking-[0.14em] text-clay">
+        이어서 읽기
+      </p>
+
+      {hasAdjacent && (
+        <nav aria-label="이전/다음 글" className="mt-4 grid gap-3 sm:grid-cols-2">
           {adjacent.prev ? (
             <Link to={`/posts/${adjacent.prev.slug}`} className={cardClass}>
               <p className="text-xs text-faded">← 이전 이야기</p>
@@ -112,7 +120,7 @@ function PostFooterNav({ post }) {
       )}
 
       {relatedPosts.length > 0 && (
-        <section className="mt-10">
+        <div className={hasAdjacent ? 'mt-6' : 'mt-4'}>
           <h2 className="text-sm font-medium text-faded">이런 이야기도 있어요</h2>
           <ul className="mt-3 space-y-2">
             {relatedPosts.map((relatedPost) => (
@@ -129,9 +137,9 @@ function PostFooterNav({ post }) {
               </li>
             ))}
           </ul>
-        </section>
+        </div>
       )}
-    </>
+    </section>
   )
 }
 
@@ -260,7 +268,7 @@ export default function PostDetail() {
       </div>
 
       <PostFooterNav post={post} />
-      <div className="mt-12 border-t border-dashed border-line pt-8">
+      <div className="mt-12 border-t border-dashed border-line pt-10">
         <Comments postId={post.id} />
       </div>
     </article>
