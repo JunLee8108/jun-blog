@@ -136,6 +136,15 @@ body {
   scroll-margin-top: 5rem;
 }
 
+/* 본문 소제목은 페이지 제목보다 확실히 작게 (계층 구분) */
+.prose h2 {
+  font-size: 1.35em;
+}
+
+.prose h3 {
+  font-size: 1.1em;
+}
+
 /* 인용구: 종이에 붙인 쪽지 */
 .prose blockquote {
   font-style: normal;

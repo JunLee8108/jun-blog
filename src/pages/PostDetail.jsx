@@ -23,7 +23,7 @@ import Comments from '../components/Comments'
 import ShareButton from '../components/ShareButton'
 import LikeButton from '../components/LikeButton'
 import ReadingProgress from '../components/ReadingProgress'
-import { Ornament } from '../components/Doodles'
+import { Ornament, Squiggle } from '../components/Doodles'
 import usePageTitle from '../hooks/usePageTitle'
 
 /* 노트 여백에 적어둔 메모 같은 목차 */
@@ -220,7 +220,7 @@ export default function PostDetail() {
         </div>
       </div>
 
-      <header className="mb-10">
+      <header className="mb-12">
         {/* 일기니까 날짜부터 */}
         <p className="text-[13px] font-medium tracking-wide text-clay tabular-nums">
           <time dateTime={post.published_at}>{formatDate(post.published_at)}</time>
@@ -245,6 +245,8 @@ export default function PostDetail() {
             ))}
           </div>
         )}
+        {/* 표지의 끝: 제목 영역을 닫는 구불선 */}
+        <Squiggle className="mt-7 h-2.5 w-24 text-clay/60" />
       </header>
 
       <TableOfContents headings={prepared.headings} />
