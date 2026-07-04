@@ -1,6 +1,6 @@
 import { useSearchParams } from 'react-router-dom'
-import { useQuery } from '@tanstack/react-query'
-import { fetchPublishedPosts } from '../lib/queries'
+import { useInfiniteQuery } from '@tanstack/react-query'
+import { fetchPublishedPostsPage } from '../lib/queries'
 import PostCard from '../components/PostCard'
 import Spinner, { EmptyState, ErrorMessage } from '../components/Spinner'
 import { Squiggle } from '../components/Doodles'
@@ -13,10 +13,26 @@ export default function Home() {
   const search = searchParams.get('q') || ''
   const debouncedSearch = useDebounce(search, 300)
 
-  const { data: posts, isLoading, isError } = useQuery({
+  const {
+    data,
+    isLoading,
+    isError,
+    hasNextPage,
+    isFetchingNextPage,
+    fetchNextPage,
+  } = useInfiniteQuery({
     queryKey: ['posts', debouncedSearch],
-    queryFn: () => fetchPublishedPosts(debouncedSearch),
+    queryFn: ({ pageParam }) =>
+      fetchPublishedPostsPage({ search: debouncedSearch, page: pageParam }),
+    initialPageParam: 0,
+    getNextPageParam: (lastPage, allPages) => {
+      const loaded = allPages.reduce((n, p) => n + p.posts.length, 0)
+      return loaded < lastPage.count ? allPages.length : undefined
+    },
   })
+
+  const posts = data?.pages.flatMap((page) => page.posts)
+  const totalCount = data?.pages[0]?.count
 
   return (
     <>
@@ -39,7 +55,9 @@ export default function Home() {
         {search ? (
           <p className="text-sm text-faded">
             <span className="font-medium text-clay">"{search}"</span> 검색 결과
-            {posts && <span className="tabular-nums"> — {posts.length}편</span>}
+            {typeof totalCount === 'number' && (
+              <span className="tabular-nums"> — {totalCount}편</span>
+            )}
           </p>
         ) : (
           <p className="text-[13px] font-medium tracking-[0.14em] text-clay">
@@ -62,6 +80,19 @@ export default function Home() {
           <PostCard key={post.id} post={post} />
         ))}
       </div>
+
+      {hasNextPage && (
+        <div className="mt-10 text-center">
+          <button
+            type="button"
+            onClick={() => fetchNextPage()}
+            disabled={isFetchingNextPage}
+            className="rounded-full border border-line px-5 py-2.5 text-sm text-body transition-colors duration-200 hover:border-clay/50 hover:text-clay disabled:opacity-50"
+          >
+            {isFetchingNextPage ? '불러오는 중…' : '지난 이야기 더 보기'}
+          </button>
+        </div>
+      )}
     </>
   )
 }

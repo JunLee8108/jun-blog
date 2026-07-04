@@ -5,6 +5,7 @@ import TagBadge from './TagBadge'
 export default function PostCard({ post }) {
   const relative = relativeDate(post.published_at)
   const summary = post.excerpt || autoExcerpt(post.content, post.format)
+  const commentCount = post.comments?.[0]?.count || 0
 
   return (
     <article className="group flex items-start gap-5 py-8 first:pt-0 sm:gap-7">
@@ -13,6 +14,7 @@ export default function PostCard({ post }) {
           <time dateTime={post.published_at}>{formatDate(post.published_at)}</time>
           {relative && <span className="text-clay/80"> · {relative}</span>}
           <span> · {readingTime(post.content)} 읽기</span>
+          {commentCount > 0 && <span> · 댓글 {commentCount}</span>}
         </p>
         <h2 className="text-lg font-semibold text-ink">
           <Link to={`/posts/${post.slug}`}>

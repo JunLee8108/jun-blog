@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
@@ -57,6 +57,31 @@ function TableOfContents({ headings }) {
         ))}
       </ul>
     </nav>
+  )
+}
+
+/* 본문 이미지 클릭 시 크게 보기 */
+function Lightbox({ src, onClose }) {
+  useEffect(() => {
+    const onKey = (e) => e.key === 'Escape' && onClose()
+    window.addEventListener('keydown', onKey)
+    document.body.style.overflow = 'hidden'
+    return () => {
+      window.removeEventListener('keydown', onKey)
+      document.body.style.overflow = ''
+    }
+  }, [onClose])
+
+  return (
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-label="이미지 크게 보기"
+      onClick={onClose}
+      className="fade-up fixed inset-0 z-50 flex cursor-zoom-out items-center justify-center bg-[#181512]/90 p-4 backdrop-blur-sm sm:p-10"
+    >
+      <img src={src} alt="" className="max-h-full max-w-full rounded-xl" />
+    </div>
   )
 }
 
@@ -148,6 +173,7 @@ export default function PostDetail() {
   const { session } = useAuth()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
+  const [lightboxSrc, setLightboxSrc] = useState(null)
 
   const { data: post, isLoading, isError } = useQuery({
     queryKey: ['post', slug],
@@ -250,13 +276,23 @@ export default function PostDetail() {
       </header>
 
       <TableOfContents headings={prepared.headings} />
-      {prepared.html !== null ? (
-        <div
-          className="prose max-w-none"
-          dangerouslySetInnerHTML={{ __html: prepared.html }}
-        />
-      ) : (
-        <Markdown content={post.content} />
+      {/* 본문 이미지 클릭 → 라이트박스 (이벤트 위임) */}
+      <div
+        onClick={(e) => {
+          if (e.target.tagName === 'IMG') setLightboxSrc(e.target.src)
+        }}
+      >
+        {prepared.html !== null ? (
+          <div
+            className="prose max-w-none"
+            dangerouslySetInnerHTML={{ __html: prepared.html }}
+          />
+        ) : (
+          <Markdown content={post.content} />
+        )}
+      </div>
+      {lightboxSrc && (
+        <Lightbox src={lightboxSrc} onClose={() => setLightboxSrc(null)} />
       )}
 
       {/* 글의 끝맺음: ✱ 아래 조용한 액션 한 줄 */}

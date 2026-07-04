@@ -2,20 +2,35 @@ import { supabase } from './supabase'
 import { slugify } from './utils'
 
 const POST_LIST_FIELDS =
-  'id, title, slug, excerpt, content, format, cover_image_url, status, published_at, created_at, view_count, like_count, tags (id, name, slug)'
+  'id, title, slug, excerpt, content, format, cover_image_url, status, published_at, created_at, view_count, like_count, tags (id, name, slug), comments (count)'
 
-export async function fetchPublishedPosts(search = '') {
+export const POSTS_PAGE_SIZE = 10
+
+// 홈 목록: 10편씩 페이지 단위로 (전체 개수 포함)
+export async function fetchPublishedPostsPage({ search = '', page = 0 }) {
   let query = supabase
     .from('posts')
-    .select(POST_LIST_FIELDS)
+    .select(POST_LIST_FIELDS, { count: 'exact' })
     .eq('status', 'published')
     .order('published_at', { ascending: false })
+    .range(page * POSTS_PAGE_SIZE, page * POSTS_PAGE_SIZE + POSTS_PAGE_SIZE - 1)
 
   if (search.trim()) {
     query = query.or(`title.ilike.%${search.trim()}%,excerpt.ilike.%${search.trim()}%`)
   }
 
-  const { data, error } = await query
+  const { data, error, count } = await query
+  if (error) throw error
+  return { posts: data, count: count ?? data.length }
+}
+
+// 기록 달력: 발행일만 가볍게 전체 조회
+export async function fetchPostDays() {
+  const { data, error } = await supabase
+    .from('posts')
+    .select('title, slug, published_at')
+    .eq('status', 'published')
+    .order('published_at', { ascending: true })
   if (error) throw error
   return data
 }

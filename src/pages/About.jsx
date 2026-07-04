@@ -1,4 +1,5 @@
 import { Squiggle } from '../components/Doodles'
+import RecordCalendar from '../components/RecordCalendar'
 import usePageTitle from '../hooks/usePageTitle'
 
 export default function About() {
@@ -20,6 +21,13 @@ export default function About() {
           싶습니다.
         </p>
       </div>
+
+      <section className="mt-14 border-t border-line pt-8">
+        <p className="mb-5 text-[13px] font-medium tracking-[0.14em] text-clay">
+          기록 달력
+        </p>
+        <RecordCalendar />
+      </section>
     </>
   )
 }
